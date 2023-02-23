@@ -1,21 +1,14 @@
 "use strict";
 
-// Show/Hide Password input in form1
+// Show/Hide Password's input in the first form
 let passwordInputForm1 = document.querySelector("#password-form1");
 let iconPassForm1 = document.getElementById("show-pass-form1");
-let iconPassForm1Switcher = false;
+
 iconPassForm1.addEventListener("click", () => {
-  if (!iconPassForm1Switcher) {
-    iconPassForm1.classList.add("bi-eye-slash");
-    iconPassForm1.classList.remove("bi-eye");
-    passwordInputForm1.type = "text";
-    iconPassForm1Switcher = !iconPassForm1Switcher;
-  } else {
-    iconPassForm1.classList.add("bi-eye");
-    iconPassForm1.classList.remove("bi-eye-slash");
-    passwordInputForm1.type = "password";
-    iconPassForm1Switcher = !iconPassForm1Switcher;
-  }
+  iconPassForm1.classList.toggle("bi-eye");
+  iconPassForm1.classList.toggle("bi-eye-slash");
+  passwordInputForm1.type =
+    passwordInputForm1.type === "password" ? "text" : "password";
 });
 
 // Show/Hide password Requirements
@@ -24,13 +17,8 @@ const passReqMenu = document.querySelector(".form2 .passwords-notes");
 let passReqSwitcher = false;
 
 passReqIcon.addEventListener("click", () => {
-  if (passReqSwitcher) {
-    passReqMenu.style.opacity = "1";
-    passReqSwitcher = !passReqSwitcher;
-  } else {
-    passReqMenu.style.opacity = "0";
-    passReqSwitcher = !passReqSwitcher;
-  }
+  passReqMenu.style.opacity = passReqSwitcher ? "1" : "0";
+  passReqSwitcher = !passReqSwitcher;
 });
 
 // Active Password Rules
@@ -40,64 +28,34 @@ const allRequirements = document.querySelectorAll(
 const passwordInput = document.getElementById("password");
 
 passwordInput.addEventListener("input", () => {
-  checkNumberOfLetters(passwordInput.value);
-  checkUpper(passwordInput.value);
-  containsNumbers(passwordInput.value);
-  containsSpecialChar(passwordInput.value);
+  let password = passwordInput.value;
+  minCharacters(password);
+  checkUpper(password);
+  containsNumbers(password);
+  containsSpecialChar(password);
+  checkSpaces(password);
 });
 
-function checkNumberOfLetters(str) {
-  if (str.length >= "6") {
-    allRequirements[0].classList.add("correct");
+function minCharacters(str) {
+  if (str.length >= 6) {
+    allRequirements[1].classList.add("correct");
   } else {
-    allRequirements[0].classList.contains("correct")
-      ? allRequirements[0].classList.remove("correct")
+    allRequirements[1].classList.contains("correct")
+      ? allRequirements[1].classList.remove("correct")
       : "";
   }
 }
 
 function checkUpper(str) {
-  let unwantedCharacters = "1234567890~`!@#$%^&*()-_=+,<.>/?'\";:]}[{\\| ";
   let haveCapitalLetter = false;
-  let capitalLetter = false;
-  str = Array.from(str);
-
-  mainLoop: for (let i = 0; i < str.length; i++) {
-    if (str[i].toUpperCase() === str[i]) {
-      for (let j = 0; j < unwantedCharacters.length; j++) {
-        if (str[i] === unwantedCharacters[j]) {
-          capitalLetter = false;
-          haveCapitalLetter = true;
-          continue mainLoop;
-        } else {
-          capitalLetter = true;
-        }
-      }
-    } else {
-      haveCapitalLetter = false;
+  for (let char of str) {
+    if (char === char.toUpperCase() && char !== char.toLowerCase()) {
+      haveCapitalLetter = true;
+      break;
     }
   }
-  if (capitalLetter && passwordInput.value !== "") {
-    allRequirements[1].classList.add("correct");
-  } else {
-    if (
-      allRequirements[1].classList.contains("correct") &&
-      !haveCapitalLetter
-    ) {
-      allRequirements[1].classList.remove("correct");
-    }
-  }
-}
 
-function containsNumbers(str) {
-  let haveNumber = false;
-  str = Array.from(str).forEach((char) => {
-    char = parseInt(char);
-    if (!isNaN(char)) {
-      haveNumber = true;
-    }
-  });
-  if (haveNumber) {
+  if (haveCapitalLetter && passwordInput.value !== "") {
     allRequirements[2].classList.add("correct");
   } else {
     if (allRequirements[2].classList.contains("correct")) {
@@ -106,39 +64,43 @@ function containsNumbers(str) {
   }
 }
 
+function containsNumbers(str) {
+  /\d/.test(str)
+    ? allRequirements[3].classList.add("correct")
+    : allRequirements[3].classList.remove("correct");
+}
+
 function containsSpecialChar(str) {
-  // Get special characters from HTML and delete sign ( and )
-  let neededCharacters = allRequirements[3].children[0].textContent;
-  neededCharacters = neededCharacters
-    .slice(neededCharacters.length - 1 - (neededCharacters.length - 1 * 2))
-    .slice(0, -1);
+  let neededCharacters = allRequirements[4].children[0].textContent.slice(
+    1,
+    -1
+  );
+
   let haveSpecialChar = false;
-  str = Array.from(str);
-  mainLoop: for (let i = 0; i < neededCharacters.length; i++) {
-    for (let j = 0; j < str.length; j++) {
-      if (str[j] === neededCharacters[i]) {
-        haveSpecialChar = true;
-        break mainLoop;
-      }
+  for (let char of str) {
+    if (neededCharacters.includes(char)) {
+      haveSpecialChar = true;
+      break;
     }
   }
+
   if (haveSpecialChar && passwordInput !== "") {
-    allRequirements[3].classList.add("correct");
+    allRequirements[4].classList.add("correct");
   } else {
-    if (allRequirements[3].classList.contains("correct")) {
-      allRequirements[3].classList.remove("correct");
+    if (allRequirements[4].classList.contains("correct")) {
+      allRequirements[4].classList.remove("correct");
     }
   }
 }
 
-let haveSpace = false;
 function checkSpaces(str) {
-  str = Array.from(str);
-  str.forEach((char) => {
-    if (char === " ") {
-      haveSpace = true;
-    }
+  let haveSpace = false;
+  str.split("").forEach((char) => {
+    if (char == " ") haveSpace = true;
   });
+  haveSpace
+    ? allRequirements[0].classList.remove("correct")
+    : allRequirements[0].classList.add("correct");
 }
 
 const submitForm2 = document.getElementById("submit-form2");
@@ -148,7 +110,6 @@ const form2Container = document.querySelector(".container-form2 .form2");
 let elePassMsg = document.createElement("div");
 form2Container.append(elePassMsg);
 elePassMsg.className = "password-massage";
-let animCounts = 1;
 
 submitForm2.addEventListener("click", (e) => {
   if (passwordInput.value !== confirmPasswordInput.value) {
